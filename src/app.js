@@ -4,6 +4,7 @@ import cors from 'cors';
 import { env } from './config/env.js';
 import { ApiResponse } from './utils/ApiResponse.js';
 import { notFoundHandler, errorHandler } from './middlewares/error.middleware.js';
+import v1Router from './routes/v1/index.js';
 
 const app = express();
 
@@ -25,6 +26,9 @@ app.get('/api/v1/health', (req, res) => {
     )
   );
 });
+
+// API v1 Routes
+app.use('/api/v1', v1Router);
 
 // 404 Route Handler
 app.use(notFoundHandler);
