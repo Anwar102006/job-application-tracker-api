@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { JobApplication } from '../models/JobApplication.js';
+import { Interview } from '../models/interview.model.js';
 import { ApiError } from '../utils/ApiError.js';
 import { VALID_APPLICATION_TRANSITIONS } from '../constants/applicationStatus.js';
 
@@ -89,7 +90,14 @@ export const getApplicationById = async (applicationId, userId) => {
     throw new ApiError(404, 'Job application not found');
   }
 
-  return application;
+  const interviews = await Interview.find({ applicationId, userId }).sort({
+    interviewDate: 1,
+  });
+
+  const appObj = application.toObject();
+  appObj.interviews = interviews;
+
+  return appObj;
 };
 
 export const updateApplication = async (applicationId, userId, updateData) => {
@@ -157,11 +165,10 @@ export const deleteApplication = async (applicationId, userId) => {
   try {
     session.startTransaction();
 
-    // In Phase 4, if Interview model is registered, cascade delete child interviews
-    if (mongoose.models.Interview) {
-      await mongoose.models.Interview.deleteMany({ applicationId, userId }, { session });
-    }
+    // Cascade delete child interviews
+    await Interview.deleteMany({ applicationId, userId }, { session });
 
+    // Delete parent job application
     await JobApplication.deleteOne({ _id: applicationId, userId }, { session });
 
     await session.commitTransaction();
@@ -176,3 +183,4 @@ export const deleteApplication = async (applicationId, userId) => {
     await session.endSession();
   }
 };
+

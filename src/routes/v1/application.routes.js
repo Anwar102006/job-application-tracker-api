@@ -1,5 +1,6 @@
 import express from 'express';
 import * as applicationController from '../../controllers/application.controller.js';
+import * as interviewController from '../../controllers/interview.controller.js';
 import { authenticate } from '../../middlewares/auth.middleware.js';
 import { validate } from '../../middlewares/validate.middleware.js';
 import {
@@ -8,6 +9,10 @@ import {
   mongoIdParamSchema,
   queryApplicationsSchema,
 } from '../../validators/application.validator.js';
+import {
+  createInterviewSchema,
+  applicationIdParamSchema,
+} from '../../validators/interview.validator.js';
 
 const router = express.Router();
 
@@ -32,6 +37,19 @@ router.patch(
   '/:id/archive',
   validate(mongoIdParamSchema),
   applicationController.toggleArchiveApplication
+);
+
+// Nested interview routes
+router.post(
+  '/:applicationId/interviews',
+  validate(createInterviewSchema),
+  interviewController.createInterview
+);
+
+router.get(
+  '/:applicationId/interviews',
+  validate(applicationIdParamSchema),
+  interviewController.getInterviewsByApplication
 );
 
 // Dynamic parameterized routes
