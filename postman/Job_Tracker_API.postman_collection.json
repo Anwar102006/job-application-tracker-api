@@ -1,0 +1,826 @@
+{
+  "info": {
+    "_postman_id": "8a1e2345-6789-4abc-def0-123456789abc",
+    "name": "Job Application Tracker API",
+    "description": "Production-ready API for tracking job applications, interview pipelines, and analytics. Contains 24 locked domain endpoints + 1 health-check utility endpoint.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Authentication",
+      "description": "Authentication and token lifecycle management endpoints (4 endpoints)",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Doe\",\n  \"email\": \"jane.doe@example.com\",\n  \"password\": \"Password123!\",\n  \"headline\": \"Full Stack Engineer\",\n  \"targetRole\": \"Senior Backend Developer\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "register"
+              ]
+            },
+            "description": "Register a new user account with bcrypt 12-round salted password hashing."
+          }
+        },
+        {
+          "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    const access = responseJson.data?.accessToken || responseJson.data?.tokens?.accessToken;",
+                  "    const refresh = responseJson.data?.refreshToken || responseJson.data?.tokens?.refreshToken;",
+                  "    if (access) pm.environment.set('accessToken', access);",
+                  "    if (refresh) pm.environment.set('refreshToken', refresh);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jane.doe@example.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Authenticate user credentials. Automatically captures accessToken and refreshToken into environment variables."
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    const access = responseJson.data?.accessToken || responseJson.data?.tokens?.accessToken;",
+                  "    const refresh = responseJson.data?.refreshToken || responseJson.data?.tokens?.refreshToken;",
+                  "    if (access) pm.environment.set('accessToken', access);",
+                  "    if (refresh) pm.environment.set('refreshToken', refresh);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/refresh-token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "refresh-token"
+              ]
+            },
+            "description": "Rotate opaque refresh token and issue a fresh JWT access token. Automatically updates tokens in environment."
+          }
+        },
+        {
+          "name": "Logout User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Revoke single refresh token session in database."
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. User Profile",
+      "description": "User profile retrieval, updates, and transactional password changes (3 endpoints)",
+      "item": [
+        {
+          "name": "Get Current User Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "me"
+              ]
+            },
+            "description": "Fetch the authenticated user profile. Excludes password and internal sensitive data."
+          }
+        },
+        {
+          "name": "Update Current User Profile",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Smith\",\n  \"headline\": \"Lead Backend Architect\",\n  \"targetRole\": \"Engineering Manager\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "me"
+              ]
+            },
+            "description": "Update mutable profile fields (name, headline, targetRole). Rejects email, password, and unrecognized keys."
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"Password123!\",\n  \"newPassword\": \"NewSecurePassword456!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/change-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "change-password"
+              ]
+            },
+            "description": "Atomically changes password and revokes all active refresh tokens across all devices within a MongoDB transaction."
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Job Applications",
+      "description": "Job application lifecycle, pagination, filtering, archiving, and deletion (6 endpoints)",
+      "item": [
+        {
+          "name": "Create Job Application",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const responseJson = pm.response.json();",
+                  "    if (responseJson.data && responseJson.data._id) {",
+                  "        pm.environment.set('applicationId', responseJson.data._id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"company\": \"Acme Innovations\",\n  \"jobTitle\": \"Senior Distributed Systems Engineer\",\n  \"jobType\": \"Full-time\",\n  \"workplaceType\": \"Remote\",\n  \"location\": \"San Francisco, CA\",\n  \"salary\": {\n    \"min\": 160000,\n    \"max\": 200000,\n    \"currency\": \"USD\",\n    \"period\": \"Yearly\"\n  },\n  \"jobUrl\": \"https://example.com/careers/backend-eng\",\n  \"status\": \"Applied\",\n  \"priority\": \"High\",\n  \"notes\": \"Exciting company working on high-throughput streaming systems\",\n  \"tags\": [\n    \"Node.js\",\n    \"MongoDB\",\n    \"Distributed Systems\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/applications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "applications"
+              ]
+            },
+            "description": "Create a new job application. Captures applicationId into environment."
+          }
+        },
+        {
+          "name": "List Job Applications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/applications?page=1&limit=10&isArchived=false",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "applications"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "isArchived",
+                  "value": "false"
+                }
+              ]
+            },
+            "description": "List job applications with pagination, search, status, and archive filters."
+          }
+        },
+        {
+          "name": "Get Job Application by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/applications/{{applicationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "applications",
+                "{{applicationId}}"
+              ]
+            },
+            "description": "Retrieve single job application by ID including its child interviews."
+          }
+        },
+        {
+          "name": "Update Job Application",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Interviewing\",\n  \"priority\": \"High\",\n  \"notes\": \"Advanced to technical interview loop\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/applications/{{applicationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "applications",
+                "{{applicationId}}"
+              ]
+            },
+            "description": "Update job application fields and transition application status through valid FSM transitions."
+          }
+        },
+        {
+          "name": "Toggle Archive Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/applications/{{applicationId}}/archive",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "applications",
+                "{{applicationId}}",
+                "archive"
+              ]
+            },
+            "description": "Toggle archive state (isArchived: true/false) for an application."
+          }
+        },
+        {
+          "name": "Delete Job Application",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/applications/{{applicationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "applications",
+                "{{applicationId}}"
+              ]
+            },
+            "description": "Hard-delete job application with transactional cascade deletion of all child interview documents."
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Interviews",
+      "description": "Interview scheduling, conflict detection, lifecycle management, and cascade deletion (7 endpoints)",
+      "item": [
+        {
+          "name": "Create Interview (Nested)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const responseJson = pm.response.json();",
+                  "    if (responseJson.data && responseJson.data._id) {",
+                  "        pm.environment.set('interviewId', responseJson.data._id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"round\": \"Technical Round\",\n  \"interviewDate\": \"2026-10-20T15:00:00.000Z\",\n  \"durationMinutes\": 60,\n  \"format\": \"Video Call\",\n  \"meetingLink\": \"https://meet.google.com/abc-defg-hij\",\n  \"interviewers\": [\n    \"Sarah Connor\",\n    \"John Connor\"\n  ],\n  \"notes\": \"Focus on system design and concurrency\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/applications/{{applicationId}}/interviews",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "applications",
+                "{{applicationId}}",
+                "interviews"
+              ]
+            },
+            "description": "Schedule a new interview for an application. Defaults to Scheduled status. Rejects client-supplied status."
+          }
+        },
+        {
+          "name": "List Application Interviews",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/applications/{{applicationId}}/interviews",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "applications",
+                "{{applicationId}}",
+                "interviews"
+              ]
+            },
+            "description": "Retrieve all interviews associated with a specific job application."
+          }
+        },
+        {
+          "name": "List Global Interviews",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/interviews?status=Scheduled",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "interviews"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "Scheduled"
+                }
+              ]
+            },
+            "description": "List all interviews across all user applications with optional status and date filters."
+          }
+        },
+        {
+          "name": "List Upcoming Interviews",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/interviews/upcoming?days=7",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "interviews",
+                "upcoming"
+              ],
+              "query": [
+                {
+                  "key": "days",
+                  "value": "7"
+                }
+              ]
+            },
+            "description": "Retrieve upcoming scheduled/rescheduled interviews within the specified day window (default: 7 days)."
+          }
+        },
+        {
+          "name": "Get Interview by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/interviews/{{interviewId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "interviews",
+                "{{interviewId}}"
+              ]
+            },
+            "description": "Retrieve details of a single interview with IDOR protection."
+          }
+        },
+        {
+          "name": "Update Interview",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Completed\",\n  \"notes\": \"Technical round went exceptionally well\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/interviews/{{interviewId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "interviews",
+                "{{interviewId}}"
+              ]
+            },
+            "description": "Update interview details or advance status through valid Interview FSM transitions."
+          }
+        },
+        {
+          "name": "Delete Interview",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/interviews/{{interviewId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "interviews",
+                "{{interviewId}}"
+              ]
+            },
+            "description": "Delete an interview document with strict user ownership enforcement."
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Analytics",
+      "description": "Aggregated statistical pipelines, status distributions, conversion rates, and monthly trends (4 endpoints)",
+      "item": [
+        {
+          "name": "Get Analytics Overview",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/analytics/overview",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "analytics",
+                "overview"
+              ]
+            },
+            "description": "High-level summary metrics: total applications, total interviews, and conversion rates (excluding archived data)."
+          }
+        },
+        {
+          "name": "Get Status Breakdown",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/analytics/status-breakdown",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "analytics",
+                "status-breakdown"
+              ]
+            },
+            "description": "Distributions across status, priority, jobType, and workplaceType with zero-filled enums."
+          }
+        },
+        {
+          "name": "Get Conversion Rates",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/analytics/conversion-rates",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "analytics",
+                "conversion-rates"
+              ]
+            },
+            "description": "Detailed funnel conversion metrics with division-by-zero protection returning 0.0."
+          }
+        },
+        {
+          "name": "Get Monthly Trends",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/analytics/monthly-trends?months=6",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "analytics",
+                "monthly-trends"
+              ],
+              "query": [
+                {
+                  "key": "months",
+                  "value": "6"
+                }
+              ]
+            },
+            "description": "Deterministic UTC monthly trend series with guaranteed zero-backfilled calendar months."
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Infrastructure Utility",
+      "description": "Infrastructure health check utility endpoint (1 endpoint)",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "health"
+              ]
+            },
+            "description": "System health status, uptime, and timestamp verification."
+          }
+        }
+      ]
+    }
+  ]
+}

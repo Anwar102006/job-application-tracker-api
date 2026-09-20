@@ -1,9 +1,12 @@
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
+import hpp from 'hpp';
 import { env } from './config/env.js';
 import { ApiResponse } from './utils/ApiResponse.js';
 import { notFoundHandler, errorHandler } from './middlewares/error.middleware.js';
+import { mongoSanitize } from './middlewares/mongoSanitize.middleware.js';
+import { generalLimiter } from './middlewares/rateLimiter.middleware.js';
 import v1Router from './routes/v1/index.js';
 
 const app = express();
@@ -15,6 +18,12 @@ app.use(cors({ origin: env.CLIENT_URL }));
 // Request Parsing with safe limits
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+
+// NoSQL query injection protection
+app.use(mongoSanitize);
+
+// HTTP Parameter Pollution protection
+app.use(hpp());
 
 // Health Check Endpoint
 app.get('/api/v1/health', (req, res) => {
@@ -28,7 +37,7 @@ app.get('/api/v1/health', (req, res) => {
 });
 
 // API v1 Routes
-app.use('/api/v1', v1Router);
+app.use('/api/v1', generalLimiter, v1Router);
 
 // 404 Route Handler
 app.use(notFoundHandler);
@@ -37,3 +46,4 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 export default app;
+
