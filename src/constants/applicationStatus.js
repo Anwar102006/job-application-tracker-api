@@ -1,0 +1,71 @@
+export const APPLICATION_STATUS = Object.freeze({
+  APPLIED: 'Applied',
+  SCREENING: 'Screening',
+  INTERVIEWING: 'Interviewing',
+  OFFERED: 'Offered',
+  REJECTED: 'Rejected',
+  WITHDRAWN: 'Withdrawn',
+  GHOSTED: 'Ghosted',
+});
+
+export const APPLICATION_STATUS_LIST = Object.freeze(Object.values(APPLICATION_STATUS));
+
+export const JOB_TYPES = Object.freeze([
+  'Full-time',
+  'Part-time',
+  'Contract',
+  'Internship',
+  'Freelance',
+]);
+
+export const WORKPLACE_TYPES = Object.freeze([
+  'On-site',
+  'Hybrid',
+  'Remote',
+]);
+
+export const PRIORITY_LEVELS = Object.freeze([
+  'Low',
+  'Medium',
+  'High',
+]);
+
+export const SALARY_PERIODS = Object.freeze([
+  'Hourly',
+  'Monthly',
+  'Yearly',
+]);
+
+export const VALID_APPLICATION_TRANSITIONS = Object.freeze({
+  [APPLICATION_STATUS.APPLIED]: [
+    APPLICATION_STATUS.SCREENING,
+    APPLICATION_STATUS.INTERVIEWING,
+    APPLICATION_STATUS.REJECTED,
+    APPLICATION_STATUS.WITHDRAWN,
+    APPLICATION_STATUS.GHOSTED,
+  ],
+  [APPLICATION_STATUS.SCREENING]: [
+    APPLICATION_STATUS.INTERVIEWING,
+    APPLICATION_STATUS.REJECTED,
+    APPLICATION_STATUS.WITHDRAWN,
+    APPLICATION_STATUS.GHOSTED,
+  ],
+  [APPLICATION_STATUS.INTERVIEWING]: [
+    APPLICATION_STATUS.OFFERED,
+    APPLICATION_STATUS.REJECTED,
+    APPLICATION_STATUS.WITHDRAWN,
+    APPLICATION_STATUS.GHOSTED,
+  ],
+  [APPLICATION_STATUS.OFFERED]: [
+    APPLICATION_STATUS.REJECTED,
+    APPLICATION_STATUS.WITHDRAWN,
+  ],
+  [APPLICATION_STATUS.REJECTED]: [], // Terminal
+  [APPLICATION_STATUS.WITHDRAWN]: [], // Terminal
+  [APPLICATION_STATUS.GHOSTED]: [
+    APPLICATION_STATUS.SCREENING,
+    APPLICATION_STATUS.INTERVIEWING,
+    APPLICATION_STATUS.REJECTED,
+    APPLICATION_STATUS.WITHDRAWN,
+  ],
+});
