@@ -311,7 +311,8 @@
               "Interviewing",
               "Offered",
               "Rejected",
-              "Withdrawn"
+              "Withdrawn",
+              "Ghosted"
             ],
             "example": "Applied"
           },
@@ -404,7 +405,8 @@
               "Interviewing",
               "Offered",
               "Rejected",
-              "Withdrawn"
+              "Withdrawn",
+              "Ghosted"
             ],
             "default": "Applied"
           },
@@ -482,7 +484,8 @@
               "Interviewing",
               "Offered",
               "Rejected",
-              "Withdrawn"
+              "Withdrawn",
+              "Ghosted"
             ]
           },
           "priority": {
@@ -1338,7 +1341,8 @@
                 "Interviewing",
                 "Offered",
                 "Rejected",
-                "Withdrawn"
+                "Withdrawn",
+                "Ghosted"
               ]
             }
           },
