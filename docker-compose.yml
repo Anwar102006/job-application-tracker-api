@@ -1,0 +1,57 @@
+services:
+  mongo:
+    image: mongo:7.0
+    container_name: job_tracker_mongo
+    restart: unless-stopped
+    command: ["--replSet", "rs0", "--bind_ip_all"]
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: >
+        mongosh --quiet --eval '
+          try {
+            const status = rs.status();
+            if (status.ok === 1) { quit(0); }
+          } catch (e) {
+            rs.initiate({ _id: "rs0", members: [{ _id: 0, host: "mongo:27017" }] });
+            quit(1);
+          }
+        '
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: job_tracker_api
+    restart: unless-stopped
+    ports:
+      - "${PORT:-5000}:${PORT:-5000}"
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: ${PORT:-5000}
+      MONGO_URI: ${MONGO_URI:-mongodb://mongo:27017/job-tracker?replicaSet=rs0}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      CLIENT_URL: ${CLIENT_URL:-http://localhost:3000}
+      TRUST_PROXY: ${TRUST_PROXY:-false}
+      DB_MAX_POOL_SIZE: ${DB_MAX_POOL_SIZE:-50}
+      DB_MIN_POOL_SIZE: ${DB_MIN_POOL_SIZE:-5}
+      DB_SERVER_SELECTION_TIMEOUT_MS: ${DB_SERVER_SELECTION_TIMEOUT_MS:-5000}
+      DB_SOCKET_TIMEOUT_MS: ${DB_SOCKET_TIMEOUT_MS:-45000}
+    depends_on:
+      mongo:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:5000/api/v1/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  mongo_data:

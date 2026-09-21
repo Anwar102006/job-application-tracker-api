@@ -14,6 +14,11 @@ const envSchema = z.object({
   MONGO_URI: z.string().min(1, 'MONGO_URI is required'),
   JWT_ACCESS_SECRET: z.string().min(32, 'JWT_ACCESS_SECRET must be at least 32 characters long'),
   CLIENT_URL: z.string().default('http://localhost:3000'),
+  TRUST_PROXY: z.string().default('false'),
+  DB_MAX_POOL_SIZE: z.coerce.number().default(50),
+  DB_MIN_POOL_SIZE: z.coerce.number().default(5),
+  DB_SERVER_SELECTION_TIMEOUT_MS: z.coerce.number().default(5000),
+  DB_SOCKET_TIMEOUT_MS: z.coerce.number().default(45000),
 });
 
 const parsed = envSchema.safeParse(process.env);

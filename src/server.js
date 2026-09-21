@@ -16,17 +16,39 @@ const startServer = async () => {
   }
 };
 
+let isShuttingDown = false;
+
 const handleGracefulShutdown = async (signal) => {
+  if (isShuttingDown) {
+    return;
+  }
+  isShuttingDown = true;
+
   console.info(`Received ${signal}. Shutting down gracefully...`);
-  if (server) {
-    server.close(async () => {
-      console.info('HTTP server closed.');
-      await disconnectDB();
-      process.exit(0);
-    });
-  } else {
+
+  const forceExitTimer = setTimeout(() => {
+    console.error('Forced shutdown: connections took too long to close.');
+    process.exit(1);
+  }, 10000);
+  forceExitTimer.unref();
+
+  try {
+    if (server) {
+      await new Promise((resolve, reject) => {
+        server.close((err) => {
+          if (err) return reject(err);
+          console.info('HTTP server closed.');
+          resolve();
+        });
+      });
+    }
+
     await disconnectDB();
+    console.info('Graceful shutdown completed successfully.');
     process.exit(0);
+  } catch (error) {
+    console.error('Error during graceful shutdown:', error);
+    process.exit(1);
   }
 };
 
