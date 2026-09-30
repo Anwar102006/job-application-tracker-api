@@ -3,10 +3,17 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AppShell } from './layouts';
-import { LoginPage, RegisterPage, ProfilePage, DesignSystemDemoPage } from './pages';
+import {
+  LoginPage,
+  RegisterPage,
+  ProfilePage,
+  DesignSystemDemoPage,
+  ApplicationsPage,
+  ApplicationDetailsPage,
+} from './pages';
 
 /**
- * Route definitions for CareerPulse frontend (Phase 6.5C)
+ * Route definitions for CareerPulse frontend (Phase 6.5D)
  */
 export const AppRoutes = () => {
   return (
@@ -23,6 +30,26 @@ export const AppRoutes = () => {
             <ProtectedRoute>
               <AppShell>
                 <DesignSystemDemoPage />
+              </AppShell>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/applications"
+          element={
+            <ProtectedRoute>
+              <AppShell>
+                <ApplicationsPage />
+              </AppShell>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/applications/:id"
+          element={
+            <ProtectedRoute>
+              <AppShell>
+                <ApplicationDetailsPage />
               </AppShell>
             </ProtectedRoute>
           }

@@ -25,7 +25,7 @@ export const Sidebar = ({ isOpen, onClose }) => {
   const navItems = [
     { label: 'Design System Demo', icon: Layers, to: '/', enabled: true },
     { label: 'Dashboard', icon: LayoutDashboard, badge: 'Phase 6.5F', enabled: false },
-    { label: 'Applications', icon: Briefcase, badge: 'Phase 6.5D', enabled: false },
+    { label: 'Applications', icon: Briefcase, to: '/applications', enabled: true },
     { label: 'Interviews', icon: Calendar, badge: 'Phase 6.5E', enabled: false },
     { label: 'Analytics', icon: BarChart3, badge: 'Phase 6.5F', enabled: false },
     { label: 'Profile & Settings', icon: Settings, to: '/profile', enabled: true },
@@ -78,7 +78,10 @@ export const Sidebar = ({ isOpen, onClose }) => {
           <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
             {navItems.map((item) => {
               const Icon = item.icon;
-              const isActive = item.enabled && item.to === location.pathname;
+              const isActive =
+                item.enabled &&
+                (item.to === location.pathname ||
+                  (item.to !== '/' && location.pathname.startsWith(item.to)));
 
               const content = (
                 <div
@@ -169,7 +172,7 @@ export const Sidebar = ({ isOpen, onClose }) => {
           <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', lineHeight: '1.4' }}>
             <strong>CareerPulse v1.0</strong>
             <br />
-            Phase 6.5C Authentication & User Profile
+            Job Application Tracker
           </p>
         </div>
       </aside>
