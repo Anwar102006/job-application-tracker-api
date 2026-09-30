@@ -1,8 +1,9 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { getAccessToken, setAccessToken, clearAccessToken } from '../services/tokenStore';
-import { refreshClient } from '../services/apiClient';
 import { refreshAccessToken } from '../services/refreshCoordinator';
+import { logout as authLogout } from '../services/authService';
+import { getCurrentUser } from '../services/userService';
 import { onSessionExpired } from '../services/authEvents';
 import { REFRESH_TOKEN_KEY } from '../constants/auth.constants';
 import { parseJwt } from '../utils/jwt';
@@ -10,17 +11,19 @@ import { parseJwt } from '../utils/jwt';
 export const AuthContext = createContext(null);
 
 /**
- * Authentication Context Provider (Phase 6.5B)
+ * Authentication Context Provider (Phase 6.5C)
  *
  * Core Architectural Invariants:
  * 1. The in-memory tokenStore is the ONLY authoritative source of the access token.
  * 2. React state never stores or duplicates the raw JWT access token.
  * 3. Handles session initialization on browser reload via global refreshCoordinator.
  * 4. Listens for cross-cutting session-expired events from refreshCoordinator/apiClient.
+ * 5. Coordinates full user profile hydration via userService.getCurrentUser().
  */
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // Authenticated state is derived from presence of active user and in-memory access token
   const isAuthenticated = useMemo(() => {
@@ -45,7 +48,10 @@ export const AuthProvider = ({ children }) => {
     }
 
     if (userData) {
-      setUser(userData);
+      setUser({
+        id: userData._id || userData.id,
+        ...userData,
+      });
     } else if (accessToken) {
       const claims = parseJwt(accessToken);
       if (claims?.sub) {
@@ -55,13 +61,27 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   /**
+   * Clear local authentication state without calling backend logout
+   * Used when tokens are already invalidated on backend (e.g., after password change)
+   */
+  const clearAuth = useCallback(() => {
+    clearAccessToken();
+    localStorage.removeItem(REFRESH_TOKEN_KEY);
+    setUser(null);
+  }, []);
+
+  /**
    * Log out current user: revoke server-side refresh token and clear local session
+   * Prevents duplicate logout calls while request is active.
    */
   const logout = useCallback(async () => {
+    if (isLoggingOut) return;
+    setIsLoggingOut(true);
+
     const storedRefreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
     try {
       if (storedRefreshToken) {
-        await refreshClient.post('/auth/logout', { refreshToken: storedRefreshToken });
+        await authLogout(storedRefreshToken);
       }
     } catch {
       // Logout is designed to be idempotent; local teardown always proceeds
@@ -69,12 +89,14 @@ export const AuthProvider = ({ children }) => {
       clearAccessToken();
       localStorage.removeItem(REFRESH_TOKEN_KEY);
       setUser(null);
+      setIsLoggingOut(false);
     }
-  }, []);
+  }, [isLoggingOut]);
 
   /**
    * App boot session initialization:
    * Restores session if a valid refreshToken exists in localStorage via global refreshCoordinator
+   * and hydrations user profile from GET /users/me
    */
   useEffect(() => {
     let isMounted = true;
@@ -96,10 +118,28 @@ export const AuthProvider = ({ children }) => {
 
         if (accessToken) {
           const claims = parseJwt(accessToken);
-          setUser({
-            id: claims?.sub || 'user',
-            role: claims?.role || 'user',
-          });
+          const fallbackUser = claims?.sub ? { id: claims.sub, role: claims.role || 'user' } : null;
+
+          // Attempt to hydrate full profile from GET /users/me
+          try {
+            const userRes = await getCurrentUser();
+            if (isMounted) {
+              const userData = userRes.data?.data || userRes.data;
+              if (userData && typeof userData === 'object') {
+                setUser({
+                  id: userData._id || userData.id || claims?.sub || 'user',
+                  ...userData,
+                });
+              } else {
+                setUser(fallbackUser);
+              }
+            }
+          } catch {
+            // Fallback to JWT claims if user fetch fails but token is valid
+            if (isMounted) {
+              setUser(fallbackUser);
+            }
+          }
         } else {
           setUser(null);
         }
@@ -136,11 +176,13 @@ export const AuthProvider = ({ children }) => {
       user,
       isAuthenticated,
       isLoading,
+      isLoggingOut,
       login: handleLoginSuccess,
       logout,
+      clearAuth,
       setUser,
     }),
-    [user, isAuthenticated, isLoading, handleLoginSuccess, logout]
+    [user, isAuthenticated, isLoading, isLoggingOut, handleLoginSuccess, logout, clearAuth]
   );
 
   return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;

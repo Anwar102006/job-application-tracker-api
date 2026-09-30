@@ -469,3 +469,14 @@
     transform: translateX(0);
   }
 }
+
+.sidebar-nav-link:hover {
+  background-color: var(--surface-hover) !important;
+  color: var(--text-primary) !important;
+}
+
+@media (max-width: 640px) {
+  .navbar-user-info {
+    display: none !important;
+  }
+}

@@ -1,20 +1,78 @@
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
+import { ProtectedRoute } from './components/ProtectedRoute';
 import { AppShell } from './layouts';
-import { DesignSystemDemoPage } from './pages/DesignSystemDemoPage';
+import { LoginPage, RegisterPage, ProfilePage, DesignSystemDemoPage } from './pages';
 
 /**
- * Root Application Component (Phase 6.5B)
- * Provides AuthProvider, layout shell, and design system demonstration view
+ * Route definitions for CareerPulse frontend (Phase 6.5C)
+ */
+export const AppRoutes = () => {
+  return (
+    <>
+      <Routes>
+        {/* Public Authentication Routes (Authenticated users redirected away) */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+
+        {/* Protected Application Routes */}
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <AppShell>
+                <DesignSystemDemoPage />
+              </AppShell>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <AppShell>
+                <ProfilePage />
+              </AppShell>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Catch-all Wildcard Route */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+
+      {/* Global Notifications */}
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: 'var(--surface)',
+            color: 'var(--text-primary)',
+            border: '1px solid var(--border)',
+            fontSize: 'var(--text-sm)',
+            borderRadius: 'var(--radius-md)',
+            boxShadow: 'var(--shadow-md)',
+          },
+        }}
+      />
+    </>
+  );
+};
+
+/**
+ * Root Application Component (Phase 6.5C)
+ * Wraps AuthProvider and BrowserRouter around AppRoutes
  */
 export const App = () => {
   return (
     <AuthProvider>
-      <AppShell>
-        <DesignSystemDemoPage />
-      </AppShell>
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
     </AuthProvider>
   );
 };
 
 export default App;
-

@@ -43,3 +43,35 @@ export const getErrorMessage = (error, fallbackMessage = 'An unexpected error oc
 
   return fallbackMessage;
 };
+
+/**
+ * Safely extract backend field-level validation errors from Axios error response
+ * Specifically maps error items from error.response.data.errors,
+ * stripping prefixes like 'body.' (e.g. 'body.email' -> 'email').
+ *
+ * @param {any} error - The caught error
+ * @returns {Record<string, string>} Object mapping field names to error messages
+ */
+export const getFieldErrors = (error) => {
+  if (!error?.response?.data?.errors || !Array.isArray(error.response.data.errors)) {
+    return {};
+  }
+
+  const fieldErrors = {};
+
+  error.response.data.errors.forEach((errItem) => {
+    if (errItem && typeof errItem === 'object') {
+      const field = typeof errItem.field === 'string' ? errItem.field : '';
+      const message = typeof errItem.message === 'string' ? errItem.message : '';
+
+      if (field && message) {
+        // Strip only the leading 'body.' prefix if present
+        const cleanField = field.startsWith('body.') ? field.slice(5) : field;
+        fieldErrors[cleanField] = message;
+      }
+    }
+  });
+
+  return fieldErrors;
+};
+
