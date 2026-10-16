@@ -26,7 +26,7 @@ export const Sidebar = ({ isOpen, onClose }) => {
     { label: 'Design System Demo', icon: Layers, to: '/', enabled: true },
     { label: 'Dashboard', icon: LayoutDashboard, badge: 'Phase 6.5F', enabled: false },
     { label: 'Applications', icon: Briefcase, to: '/applications', enabled: true },
-    { label: 'Interviews', icon: Calendar, badge: 'Phase 6.5E', enabled: false },
+    { label: 'Interviews', icon: Calendar, to: '/interviews', enabled: true },
     { label: 'Analytics', icon: BarChart3, badge: 'Phase 6.5F', enabled: false },
     { label: 'Profile & Settings', icon: Settings, to: '/profile', enabled: true },
   ];

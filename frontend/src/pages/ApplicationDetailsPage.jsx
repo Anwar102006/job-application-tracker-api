@@ -11,6 +11,10 @@ import {
   Trash2,
   AlertCircle,
   FileText,
+  Calendar,
+  Plus,
+  Clock,
+  Eye,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import {
@@ -25,7 +29,13 @@ import {
   EmptyState,
 } from '../components/atoms';
 import { StatusBadge, PriorityBadge, ApplicationForm } from '../components/applications';
+import {
+  InterviewStatusBadge,
+  InterviewFormatBadge,
+  InterviewForm,
+} from '../components/interviews';
 import * as applicationService from '../services/applicationService';
+import * as interviewService from '../services/interviewService';
 import { getErrorMessage, getFieldErrors } from '../utils/errorUtils';
 
 /**
@@ -89,11 +99,17 @@ export const ApplicationDetailsPage = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isScheduleInterviewModalOpen, setIsScheduleInterviewModalOpen] = useState(false);
 
   // Action states
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formServerErrors, setFormServerErrors] = useState({});
   const [formGeneralError, setFormGeneralError] = useState('');
+
+  // Interview action states
+  const [isInterviewSubmitting, setIsInterviewSubmitting] = useState(false);
+  const [interviewServerErrors, setInterviewServerErrors] = useState({});
+  const [interviewGeneralError, setInterviewGeneralError] = useState('');
 
   // Fetch application details
   const fetchApplication = useCallback(async () => {
@@ -179,6 +195,27 @@ export const ApplicationDetailsPage = () => {
     } catch (err) {
       toast.error(getErrorMessage(err, 'Failed to delete application.'));
       setIsSubmitting(false);
+    }
+  };
+
+  // Handle Schedule Interview
+  const handleScheduleInterviewSubmit = async (payload) => {
+    setIsInterviewSubmitting(true);
+    setInterviewServerErrors({});
+    setInterviewGeneralError('');
+
+    try {
+      await interviewService.createInterview(application._id, payload);
+      toast.success('Interview scheduled successfully!');
+      setIsScheduleInterviewModalOpen(false);
+      fetchApplication();
+    } catch (err) {
+      const message = getErrorMessage(err);
+      const fieldErrors = getFieldErrors(err);
+      setInterviewGeneralError(message);
+      setInterviewServerErrors(fieldErrors);
+    } finally {
+      setIsInterviewSubmitting(false);
     }
   };
 
@@ -507,6 +544,128 @@ export const ApplicationDetailsPage = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Interviews Section */}
+      <Card style={{ marginBottom: 'var(--space-xl)' }} data-testid="application-interviews-card">
+        <CardHeader>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)' }}>
+              <Calendar size={18} style={{ color: 'var(--accent)' }} aria-hidden="true" />
+              <CardTitle>Scheduled Interviews</CardTitle>
+            </div>
+            {!application.isArchived ? (
+              <Button
+                variant="outline"
+                size="sm"
+                leftIcon={<Plus size={14} />}
+                onClick={() => {
+                  setInterviewServerErrors({});
+                  setInterviewGeneralError('');
+                  setIsScheduleInterviewModalOpen(true);
+                }}
+                data-testid="app-schedule-interview-btn"
+              >
+                Schedule Interview
+              </Button>
+            ) : (
+              <span
+                style={{
+                  fontSize: 'var(--text-xs)',
+                  color: 'var(--text-muted)',
+                  fontStyle: 'italic',
+                }}
+              >
+                Archived (Interviews Locked)
+              </span>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          {application.isArchived && (
+            <div
+              style={{
+                padding: 'var(--space-sm) var(--space-md)',
+                marginBottom: 'var(--space-md)',
+                borderRadius: 'var(--radius-sm)',
+                backgroundColor: 'var(--warning-subtle)',
+                color: 'var(--warning-foreground)',
+                fontSize: 'var(--text-xs)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 'var(--space-xs)',
+              }}
+            >
+              <AlertCircle size={14} aria-hidden="true" />
+              <span>Interviews cannot be scheduled for archived applications. Unarchive this application first.</span>
+            </div>
+          )}
+
+          {application.interviews && application.interviews.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+              {application.interviews.map((intv) => (
+                <div
+                  key={intv._id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: 'var(--space-sm) var(--space-md)',
+                    borderRadius: 'var(--radius-md)',
+                    border: '1px solid var(--border)',
+                    backgroundColor: 'var(--bg-secondary)',
+                    gap: 'var(--space-sm)',
+                  }}
+                  data-testid="app-interview-item"
+                >
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)', marginBottom: '2px' }}>
+                      <strong style={{ fontSize: 'var(--text-sm)', color: 'var(--text-primary)' }}>{intv.round}</strong>
+                      <InterviewStatusBadge status={intv.status} />
+                      <InterviewFormatBadge format={intv.format} />
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
+                      <Clock size={12} aria-hidden="true" />
+                      <span>{new Date(intv.interviewDate).toLocaleString()}</span>
+                      <span>({intv.durationMinutes || 60} mins)</span>
+                    </div>
+                  </div>
+
+                  <Link to={`/interviews/${intv._id}`} style={{ textDecoration: 'none' }}>
+                    <Button variant="ghost" size="sm" leftIcon={<Eye size={13} />}>
+                      Details
+                    </Button>
+                  </Link>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p style={{ margin: 0, color: 'var(--text-muted)', fontStyle: 'italic', fontSize: 'var(--text-sm)' }} data-testid="app-no-interviews">
+              No interviews scheduled for this application yet.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Schedule Interview Modal */}
+      <Modal
+        isOpen={isScheduleInterviewModalOpen}
+        onClose={() => {
+          if (!isInterviewSubmitting) setIsScheduleInterviewModalOpen(false);
+        }}
+        title={`Schedule Interview for ${application.company}`}
+        data-testid="app-schedule-interview-modal"
+      >
+        <InterviewForm
+          mode="create"
+          selectedApplicationId={application._id}
+          applications={[application]}
+          onSubmit={handleScheduleInterviewSubmit}
+          onCancel={() => setIsScheduleInterviewModalOpen(false)}
+          isLoading={isInterviewSubmitting}
+          serverErrors={interviewServerErrors}
+          generalError={interviewGeneralError}
+        />
+      </Modal>
 
       {/* Edit Modal */}
       <Modal

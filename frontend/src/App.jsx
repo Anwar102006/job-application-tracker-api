@@ -10,10 +10,12 @@ import {
   DesignSystemDemoPage,
   ApplicationsPage,
   ApplicationDetailsPage,
+  InterviewsPage,
+  InterviewDetailsPage,
 } from './pages';
 
 /**
- * Route definitions for CareerPulse frontend (Phase 6.5D)
+ * Route definitions for CareerPulse frontend (Phase 6.5E)
  */
 export const AppRoutes = () => {
   return (
@@ -50,6 +52,26 @@ export const AppRoutes = () => {
             <ProtectedRoute>
               <AppShell>
                 <ApplicationDetailsPage />
+              </AppShell>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/interviews"
+          element={
+            <ProtectedRoute>
+              <AppShell>
+                <InterviewsPage />
+              </AppShell>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/interviews/:id"
+          element={
+            <ProtectedRoute>
+              <AppShell>
+                <InterviewDetailsPage />
               </AppShell>
             </ProtectedRoute>
           }
