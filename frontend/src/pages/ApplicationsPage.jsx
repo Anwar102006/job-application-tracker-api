@@ -136,6 +136,13 @@ export const ApplicationsPage = () => {
     setSearchInput(currentFilters.search);
   }, [currentFilters.search]);
 
+  // Open create modal if URL search parameter action=new is present (Phase 6.5G quick action)
+  useEffect(() => {
+    if (searchParams.get('action') === 'new') {
+      setIsCreateModalOpen(true);
+    }
+  }, [searchParams]);
+
   // Update URL search parameters safely
   const updateUrlParams = useCallback((newParams) => {
     const updated = new URLSearchParams(searchParams);

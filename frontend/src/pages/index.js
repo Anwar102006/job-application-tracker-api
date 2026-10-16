@@ -7,3 +7,4 @@ export { ApplicationDetailsPage } from './ApplicationDetailsPage';
 export { InterviewsPage } from './InterviewsPage';
 export { InterviewDetailsPage } from './InterviewDetailsPage';
 export { AnalyticsPage } from './AnalyticsPage';
+export { DashboardPage } from './DashboardPage';

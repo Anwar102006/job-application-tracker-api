@@ -26,6 +26,10 @@ export const STATUS_COLORS = Object.freeze({
   Interviewing: '#8b5cf6', // Violet
   Offered: '#10b981',      // Emerald
   Rejected: '#ef4444',     // Crimson
+  Draft: '#64748b',        // Slate
+  Shortlisted: '#7c3aed',  // Purple
+  Accepted: '#059669',     // Emerald/Green
+  Declined: '#f43f5e',     // Rose
   Withdrawn: '#64748b',    // Slate
   Ghosted: '#94a3b8',      // Gray
 });

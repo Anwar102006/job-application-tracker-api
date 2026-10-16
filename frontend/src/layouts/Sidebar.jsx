@@ -24,7 +24,7 @@ export const Sidebar = ({ isOpen, onClose }) => {
 
   const navItems = [
     { label: 'Design System Demo', icon: Layers, to: '/', enabled: true },
-    { label: 'Dashboard', icon: LayoutDashboard, badge: 'Phase 6.5F', enabled: false },
+    { label: 'Dashboard', icon: LayoutDashboard, to: '/dashboard', enabled: true },
     { label: 'Applications', icon: Briefcase, to: '/applications', enabled: true },
     { label: 'Interviews', icon: Calendar, to: '/interviews', enabled: true },
     { label: 'Analytics', icon: BarChart3, to: '/analytics', enabled: true },

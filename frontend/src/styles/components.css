@@ -480,3 +480,55 @@
     display: none !important;
   }
 }
+
+/* ==========================================================================
+   Dashboard UI Styles (Phase 6.5G)
+   ========================================================================== */
+.dashboard-header-top {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+@media (min-width: 768px) {
+  .dashboard-header-top {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+}
+
+.dashboard-metric-card {
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+}
+
+.dashboard-metric-card.clickable {
+  cursor: pointer;
+}
+
+.dashboard-metric-card.clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--accent);
+}
+
+.dashboard-metric-card.clickable:hover .metric-card-arrow {
+  transform: translate(2px, -2px);
+  color: var(--accent);
+}
+
+.dashboard-item-card {
+  transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.dashboard-item-card:hover {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-sm);
+  background-color: var(--surface-hover);
+}
+
+.pipeline-status-pill:hover {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-sm);
+  background-color: var(--surface-hover);
+}

@@ -13,10 +13,11 @@ import {
   InterviewsPage,
   InterviewDetailsPage,
   AnalyticsPage,
+  DashboardPage,
 } from './pages';
 
 /**
- * Route definitions for CareerPulse frontend (Phase 6.5F)
+ * Route definitions for CareerPulse frontend (Phase 6.5G)
  */
 export const AppRoutes = () => {
   return (
@@ -33,6 +34,16 @@ export const AppRoutes = () => {
             <ProtectedRoute>
               <AppShell>
                 <DesignSystemDemoPage />
+              </AppShell>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <AppShell>
+                <DashboardPage />
               </AppShell>
             </ProtectedRoute>
           }
